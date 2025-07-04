@@ -7,7 +7,7 @@
   const coinSprite = new Image();
   coinSprite.src = 'coin_sprite_sheet.png';
 
-  const COIN_FRAME_COUNT = 8;
+  const COIN_FRAME_COUNT = 24;
   let coinFrame = 0;
   let coinTick = 0;
 
