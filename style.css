@@ -1,9 +1,25 @@
-body, html {
+html, body {
   margin: 0;
   padding: 0;
+  background: #1e3c72;
   overflow: hidden;
 }
 #gameCanvas {
   display: block;
-  background: #1e3c72;
 }
+.ctrl-btn {
+  position: fixed;
+  bottom: 20px;
+  width: 60px;
+  height: 60px;
+  line-height: 60px;
+  border-radius: 30px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 30px;
+  text-align: center;
+  user-select: none;
+  z-index: 1000;
+}
+#leftBtn { left: 20px; }
+#rightBtn { right: 20px; }
