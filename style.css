@@ -1,13 +1,12 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: #87ceeb; /* небесно-голубой фон */
-  overflow: hidden;    /* отключаем прокрутку страницы */
+  background: linear-gradient(to top, #1e3c72, #2a5298);
+  overflow: hidden;
 }
 #gameCanvas {
-  display: block;      /* canvas заполняет доступное пространство */
+  display: block;
 }
-/* Стили для кнопок управления (левая/правая стрелки) */
 .ctrl-btn {
   position: fixed;
   bottom: 20px;
@@ -20,7 +19,7 @@ html, body {
   font-size: 30px;
   text-align: center;
   user-select: none;
-  z-index: 1000;       /* кнопки располагаются над канвасом */
+  z-index: 1000;
 }
 #leftBtn {
   left: 20px;

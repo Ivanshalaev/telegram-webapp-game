@@ -1,36 +1,37 @@
 (() => {
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
+  const coinSound = document.getElementById('coinSound');
+  const boomSound = document.getElementById('boomSound');
+
   let width, height;
-  // Переменные игры
-  let basketX, basketWidth = 60, basketHeight = 20;
+  let basketX, basketWidth = 70, basketHeight = 20;
   let coins = [];
   let bombs = [];
+  let explosions = [];
   let score = 0;
   let gameOver = false;
-  // Переменные для управления
   let leftPressed = false;
   let rightPressed = false;
-  // Скорости движения
   const basketSpeed = 5;
   const coinSpeed = 3;
   const bombSpeed = 3;
-  const coinR = 10;   // радиус монеты
-  const bombR = 10;   // радиус бомбы
+  const coinR = 15;
+  const bombR = 15;
 
-  // Устанавливаем размер канваса на весь экран
+  const explosionImage = new Image();
+  explosionImage.src = 'explosion.png';
+
   function resizeCanvas() {
     width = window.innerWidth;
     height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
-    // Начальная позиция корзины – по центру снизу
     basketX = (width - basketWidth) / 2;
   }
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 
-  // Управление с клавиатуры
   window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft') leftPressed = true;
     if (e.key === 'ArrowRight') rightPressed = true;
@@ -40,142 +41,131 @@
     if (e.key === 'ArrowRight') rightPressed = false;
   });
 
-  // Управление через кнопки на экране (для мобильных)
   const leftBtn = document.getElementById('leftBtn');
   const rightBtn = document.getElementById('rightBtn');
-  leftBtn.addEventListener('pointerdown', () => { leftPressed = true; });
-  leftBtn.addEventListener('pointerup', () => { leftPressed = false; });
-  leftBtn.addEventListener('pointerleave', () => { leftPressed = false; });
-  rightBtn.addEventListener('pointerdown', () => { rightPressed = true; });
-  rightBtn.addEventListener('pointerup', () => { rightPressed = false; });
-  rightBtn.addEventListener('pointerleave', () => { rightPressed = false; });
+  leftBtn.onpointerdown = () => leftPressed = true;
+  leftBtn.onpointerup = () => leftPressed = false;
+  rightBtn.onpointerdown = () => rightPressed = true;
+  rightBtn.onpointerup = () => rightPressed = false;
 
-  // Обработка нажатия по экрану для рестарта после окончания игры
   canvas.addEventListener('pointerdown', () => {
-    if (gameOver) {
-      restartGame();
-    }
-    // (при игре касание экрана вне кнопок можно обрабатывать при желании)
+    if (gameOver) restartGame();
   });
 
-  // Функция рестарта игры
   function restartGame() {
     coins = [];
     bombs = [];
+    explosions = [];
     score = 0;
     gameOver = false;
     basketX = (width - basketWidth) / 2;
     requestAnimationFrame(gameLoop);
   }
 
-  // Главный игровой цикл
+  function draw3DCoin(x, y) {
+    const gradient = ctx.createRadialGradient(x, y, 5, x, y, coinR);
+    gradient.addColorStop(0, '#fff480');
+    gradient.addColorStop(1, '#ffcc00');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, coinR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#996600';
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('$', x, y);
+  }
+
+  function drawBomb(x, y) {
+    ctx.fillStyle = '#333';
+    ctx.beginPath();
+    ctx.arc(x, y, bombR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#f00';
+    ctx.beginPath();
+    ctx.arc(x, y - bombR, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawExplosion(x, y) {
+    ctx.drawImage(explosionImage, x - 32, y - 32, 64, 64);
+  }
+
   function gameLoop() {
-    // Заливка фона (очистка экрана)
-    ctx.fillStyle = '#87ceeb';
-    ctx.fillRect(0, 0, width, height);
+    ctx.clearRect(0, 0, width, height);
 
-    // Двигаем корзину влево/вправо при нажатых кнопках
-    if (leftPressed) {
-      basketX -= basketSpeed;
-      if (basketX < 0) basketX = 0;
-    }
-    if (rightPressed) {
-      basketX += basketSpeed;
-      if (basketX + basketWidth > width) {
-        basketX = width - basketWidth;
-      }
-    }
+    // Draw ground
+    ctx.fillStyle = '#444';
+    ctx.fillRect(0, height - 40, width, 40);
+    ctx.fillStyle = '#222';
+    ctx.fillRect(0, height - 20, width, 20);
 
-    // Обновляем положение бомб и проверяем столкновения
+    if (leftPressed) basketX = Math.max(0, basketX - basketSpeed);
+    if (rightPressed) basketX = Math.min(width - basketWidth, basketX + basketSpeed);
+
     for (let i = bombs.length - 1; i >= 0; i--) {
-      const b = bombs[i];
+      let b = bombs[i];
       b.y += bombSpeed;
-      // Удаляем бомбы, которые упали ниже экрана
       if (b.y - bombR > height) {
         bombs.splice(i, 1);
         continue;
       }
-      // Проверяем попадание бомбы в корзину
       if (b.y + bombR >= height - basketHeight && b.x >= basketX && b.x <= basketX + basketWidth) {
-        gameOver = true; // поймали бомбу – игра закончена
+        gameOver = true;
+        explosions.push({ x: b.x, y: b.y, timer: 30 });
+        boomSound.play();
         break;
       }
     }
 
-    // Обновляем положение монет, если игра не окончена
-    if (!gameOver) {
-      for (let j = coins.length - 1; j >= 0; j--) {
-        const c = coins[j];
-        c.y += coinSpeed;
-        // Удаляем монеты, улетевшие ниже экрана
-        if (c.y - coinR > height) {
-          coins.splice(j, 1);
-          continue;
-        }
-        // Проверяем попадание монеты в корзину
-        if (c.y + coinR >= height - basketHeight && c.x >= basketX && c.x <= basketX + basketWidth) {
-          score += 1;            // увеличиваем счёт
-          coins.splice(j, 1);    // удаляем пойманную монету
-          continue;
-        }
+    for (let j = coins.length - 1; j >= 0; j--) {
+      let c = coins[j];
+      c.y += coinSpeed;
+      if (c.y - coinR > height) {
+        coins.splice(j, 1);
+        continue;
+      }
+      if (c.y + coinR >= height - basketHeight && c.x >= basketX && c.x <= basketX + basketWidth) {
+        score++;
+        coinSound.play();
+        coins.splice(j, 1);
+        continue;
       }
     }
 
-    // Рисуем корзину (зеленый прямоугольник)
-    ctx.fillStyle = '#008800';
+    for (let e = explosions.length - 1; e >= 0; e--) {
+      let exp = explosions[e];
+      drawExplosion(exp.x, exp.y);
+      exp.timer--;
+      if (exp.timer <= 0) explosions.splice(e, 1);
+    }
+
+    ctx.fillStyle = '#00aa00';
     ctx.fillRect(basketX, height - basketHeight, basketWidth, basketHeight);
 
-    // Рисуем монеты (золотые круги)
-    ctx.fillStyle = '#FFD700';
-    for (const c of coins) {
-      ctx.beginPath();
-      ctx.arc(c.x, c.y, coinR, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    for (const c of coins) draw3DCoin(c.x, c.y);
+    for (const b of bombs) drawBomb(b.x, b.y);
 
-    // Рисуем бомбы (темно-серые круги с красной «искрой»)
-    ctx.fillStyle = '#444';
-    for (const b of bombs) {
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, bombR, 0, Math.PI * 2);
-      ctx.fill();
-      // рисуем небольшой красный фитиль у бомбы
-      ctx.fillStyle = '#f00';
-      ctx.beginPath();
-      ctx.arc(b.x, b.y - bombR, 3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#444';
-    }
-
-    // Выводим счёт в левом верхнем углу
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = '#fff';
     ctx.font = '20px Arial';
-    ctx.textAlign = 'start';
     ctx.fillText(`Score: ${score}`, 10, 30);
 
-    // Если игра окончена – выводим сообщение и не перезапускаем цикл
     if (gameOver) {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';  // полупрозрачный фон под сообщением
-      ctx.fillRect(0, height/2 - 40, width, 80);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.fillRect(0, height / 2 - 40, width, 80);
       ctx.fillStyle = '#fff';
       ctx.font = '30px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(`Игра окончена! Счёт: ${score}`, width / 2, height/2);
+      ctx.fillText(`Игра окончена! Счёт: ${score}`, width / 2, height / 2);
       ctx.font = '20px Arial';
-      ctx.fillText(`Нажмите, чтобы начать заново`, width / 2, height/2 + 30);
-      // Цикл не продолжается, игра остановлена до рестарта
+      ctx.fillText(`Нажми, чтобы начать заново`, width / 2, height / 2 + 30);
     } else {
-      // Если игра продолжается – случайным образом создаём новые монеты/бомбы
-      if (Math.random() < 0.02) {
-        coins.push({ x: Math.random() * (width - coinR*2) + coinR, y: -coinR });
-      }
-      if (Math.random() < 0.005) {
-        bombs.push({ x: Math.random() * (width - bombR*2) + bombR, y: -bombR });
-      }
+      if (Math.random() < 0.02) coins.push({ x: Math.random() * (width - coinR*2) + coinR, y: -coinR });
+      if (Math.random() < 0.01) bombs.push({ x: Math.random() * (width - bombR*2) + bombR, y: -bombR });
       requestAnimationFrame(gameLoop);
     }
   }
 
-  // Запускаем игру первый раз
   requestAnimationFrame(gameLoop);
 })();
