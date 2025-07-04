@@ -26,12 +26,22 @@
   let coinFrame = 0;
   let coinTick = 0;
 
-  const leftBtn = document.getElementById('leftBtn');
-  const rightBtn = document.getElementById('rightBtn');
-  leftBtn.onpointerdown = () => leftPressed = true;
-  leftBtn.onpointerup = () => leftPressed = false;
-  rightBtn.onpointerdown = () => rightPressed = true;
-  rightBtn.onpointerup = () => rightPressed = false;
+  canvas.addEventListener('pointerdown', (e) => {
+    const x = e.clientX;
+    if (x < window.innerWidth / 2) {
+      leftPressed = true;
+    } else {
+      rightPressed = true;
+    }
+  });
+  canvas.addEventListener('pointerup', () => {
+    leftPressed = false;
+    rightPressed = false;
+  });
+  canvas.addEventListener('pointerleave', () => {
+    leftPressed = false;
+    rightPressed = false;
+  });
 
   window.addEventListener('keydown', e => {
     if (e.key === 'ArrowLeft') leftPressed = true;
