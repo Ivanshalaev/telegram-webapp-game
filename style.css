@@ -1,0 +1,30 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #87ceeb; /* небесно-голубой фон */
+  overflow: hidden;    /* отключаем прокрутку страницы */
+}
+#gameCanvas {
+  display: block;      /* canvas заполняет доступное пространство */
+}
+/* Стили для кнопок управления (левая/правая стрелки) */
+.ctrl-btn {
+  position: fixed;
+  bottom: 20px;
+  width: 60px;
+  height: 60px;
+  line-height: 60px;
+  border-radius: 30px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 30px;
+  text-align: center;
+  user-select: none;
+  z-index: 1000;       /* кнопки располагаются над канвасом */
+}
+#leftBtn {
+  left: 20px;
+}
+#rightBtn {
+  right: 20px;
+}
