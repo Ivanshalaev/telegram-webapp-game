@@ -1,25 +1,12 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: #1e3c72;
   overflow: hidden;
+  background: #000;
 }
+
 #gameCanvas {
   display: block;
+  background: url('vault-bg.png') no-repeat center center;
+  background-size: cover;
 }
-.ctrl-btn {
-  position: fixed;
-  bottom: 20px;
-  width: 60px;
-  height: 60px;
-  line-height: 60px;
-  border-radius: 30px;
-  background: rgba(0, 0, 0, 0.5);
-  color: #fff;
-  font-size: 30px;
-  text-align: center;
-  user-select: none;
-  z-index: 1000;
-}
-#leftBtn { left: 20px; }
-#rightBtn { right: 20px; }
